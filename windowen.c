@@ -1,4 +1,4 @@
-#include "guilib.h"
+#include "windowen.h"
 #include <ncurses.h>
 #include <stdlib.h>
 #include <pthread.h>

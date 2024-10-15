@@ -188,6 +188,13 @@ void info_draw(void* arg) {
 
     sprintf(buf, "Char: %d", obj->field->spawn_char);
     windowen_addstr(obj->self, x, y++, buf);
+
+
+    y = LINES - 2;
+    windowen_addstr(obj->self, x, y--, "'q' - for exit");
+    windowen_addstr(obj->self, x, y--, "Any char - select for drawing");
+    windowen_addstr(obj->self, x, y--, "Mouse moving - drawing");
+    windowen_addstr(obj->self, x, y--, "Click - turn on/off drawing");
 }
 
 int main() {
@@ -254,7 +261,7 @@ int main() {
             break;
         }
 
-        mvprintw(LINES - 2, 1, "input: %c(%d)", input, input);
+        // mvprintw(LINES - 2, 1, "input: %c(%d)", input, input);
 
         int target_delay = (loop_delay - elapsed) * 100;
 

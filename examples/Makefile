@@ -14,12 +14,13 @@ LIB_SRC = $(wildcard $(LIB_DIR)/*.c)
 LIB_OBJ = $(LIB_SRC:.c=.o)
 
 all: $(NAMES)
+	@echo "THE ALL TARGET"
 
-%.o: %.c
-	$(CC) $(CFLAGS) -c $^ -o
+# %.o: %.c
+# 	$(CC) $(CFLAGS) -c $^ -o
 
-%: %.o
-	$(CC) $(CFLAGS) $^ $(LIB_OBJ) -o $@ $(LDFLAGS)
+paint: paint.o $(LIB_OBJ)
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 show:
 	@echo $(LIB_SRC)
