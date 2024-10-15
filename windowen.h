@@ -36,8 +36,7 @@ typedef struct {
 
     struct {
         WINDOW* obj;
-        size_t size_x, size_y;
-
+        int size_x, size_y;
     } window;
 
     // TODO: add enum and function for turn on/off borders
