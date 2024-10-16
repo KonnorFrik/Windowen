@@ -24,6 +24,8 @@ windowen* windowen_new(int size_x, int size_y, int pos_x, int pos_y) {
         obj->window.position_x = pos_x;
         obj->window.position_y = pos_y;
         obj->window.obj = newwin(size_y, size_x, pos_y, pos_x);
+
+        obj->settings.is_visible = 1;
     }
 
     return obj;
@@ -125,8 +127,33 @@ void windowen_addstr(windowen* obj, int x, int y, const char* str) {
     mvwaddstr(obj->window.obj, y, x, buf);
 }
 
-void windowen_update(windowen* obj) {
+void windowen_show(windowen* obj) {
     if ( !obj ) {
+        return;
+    }
+
+    obj->settings.is_visible = 1;
+}
+
+void windowen_hide(windowen* obj) {
+    if ( !obj ) {
+        return;
+    }
+
+    obj->settings.is_visible = 0;
+    wclear(obj->window.obj);
+}
+
+int windowen_isvisible(windowen* obj) {
+    if ( !obj ) {
+        return 0;
+    }
+
+    return obj->settings.is_visible;
+}
+
+void windowen_update(windowen* obj) {
+    if ( !obj || !obj->settings.is_visible ) {
         return;
     }
 
@@ -136,7 +163,7 @@ void windowen_update(windowen* obj) {
 }
 
 void windowen_draw(windowen* obj) {
-    if ( !obj ) {
+    if ( !obj || !obj->settings.is_visible ) {
         return;
     }
 
@@ -180,7 +207,7 @@ void windowen_input(windowen* obj, int input) {
 }
 
 void windowen_delete(windowen* obj) {
-    if (!obj) {
+    if ( !obj ) {
         return;
     }
 

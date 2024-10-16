@@ -14,6 +14,11 @@ typedef void(*callback_mouse)(void*, MEVENT); ///< Callback signature to registe
 typedef void(*callback_draw)(void*);          ///< Callback signature to register for drawing 
 typedef void(*callback_update)(void*);        ///< Callback signature to register for update states 
 
+// TODO:
+// fix input
+//  call to getmouse return error for second call in one loop iteration
+// add moving window function
+
 /** @brief Wrap for WINDOW object from ncurses
  */
 typedef struct {
@@ -42,6 +47,10 @@ typedef struct {
         int size_x, size_y;
         int position_x, position_y;
     } window;
+
+    struct {
+        int is_visible;
+    } settings;
 
     // TODO: add enum and function for turn on/off borders
     // add custom borders
@@ -98,6 +107,20 @@ windowen* windowen_register_update_callback(windowen* obj, callback_update func,
  */
 void windowen_addstr(windowen* obj, int x, int y, const char* str);
 
+/** @brief Make window invisible
+ */
+void windowen_show(windowen* obj);
+
+/** @brief Make window ininvisible
+ */
+void windowen_hide(windowen* obj);
+
+/** @breif Return status is window visible
+ * @param[in, out] obj Windowen object
+ * @return status 1 for VISIBLE, 0 otherwise
+ */
+int windowen_isvisible(windowen* obj);
+
 /** @brief Safe call registered update function
  * @param[in, out] obj Windowen object with registered callback function
  */
@@ -107,6 +130,8 @@ void windowen_update(windowen* obj);
  *
  * For first clear window and call box(..., 0, 0) for window
  * At last call refresh for window
+ *
+ * For invisible window call only wclear
  *
  * @param[in, out] obj Windowen object with registered callback function
  */
