@@ -21,6 +21,8 @@ windowen* windowen_new(int size_x, int size_y, int pos_x, int pos_y) {
     if (obj) {
         obj->window.size_x = size_x;
         obj->window.size_y = size_y;
+        obj->window.position_x = pos_x;
+        obj->window.position_y = pos_y;
         obj->window.obj = newwin(size_y, size_x, pos_y, pos_x);
     }
 
