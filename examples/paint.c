@@ -14,6 +14,7 @@
 #include <stdlib.h>
 
 #define DEBUG 0
+#define VERBOSE 1
 
 // static windowen* in_focus = NULL;
 
@@ -146,7 +147,9 @@ void field_update(void* arg) {
     field* obj = (field*)arg;
 
     if ( obj->is_spawn ) {
+        #if VERBOSE == 1
         fprintf(stderr, "Spawn at X:%d Y:%d\n", obj->cursor_x, obj->cursor_y);
+        #endif
 
         if ( obj->cursor_x > 0 && obj->cursor_x < obj->size_x &&
              obj->cursor_y > 0 && obj->cursor_y < obj->size_y && 
@@ -166,7 +169,10 @@ void field_draw(void* arg) {
         for (int c = 0; c < obj->size_x; ++c) {
             if ( obj->field[r][c] ) {
                 mvwaddch(obj->self->window.obj, r, c, obj->field[r][c]);
+
+                #if VERBOSE == 1
                 fprintf(stderr, "Draw at: X:%d Y:%d V:%c\n", c, r, obj->field[r][c]);
+                #endif
             }
         }
     }
@@ -195,6 +201,36 @@ void info_draw(void* arg) {
     windowen_addstr(obj->self, x, y--, "Any char - select for drawing");
     windowen_addstr(obj->self, x, y--, "Mouse moving - drawing");
     windowen_addstr(obj->self, x, y--, "Click - turn on/off drawing");
+}
+
+void pop_up_draw(void* arg) {
+    windowen* obj = (windowen*)arg;
+    mvwaddch(obj->window.obj, 0, obj->window.size_x - 1, 'X');
+    windowen_addstr(obj, 1, 1, "Hello)");
+}
+
+void pop_up_mouse(void* arg, MEVENT event) {
+    windowen* obj = (windowen*)arg;
+
+    if ( event.bstate & BUTTON3_CLICKED ) {
+        windowen_show(obj);
+        #if VERBOSE == 1
+        fprintf(stderr, "POP UP is show\n");
+        #endif
+        // add move window
+
+    } else if ( event.bstate & BUTTON1_CLICKED && windowen_isvisible(obj) ) {
+        int x = event.x, y = event.y;
+        if ( wmouse_trafo(obj->window.obj, &y, &x, FALSE) == TRUE &&
+             (x == obj->window.size_x - 1 && y == 0) ) {
+            windowen_hide(obj);
+
+            #if VERBOSE == 1
+            fprintf(stderr, "POP UP M1 at X:%d Y:%d\n", x, y);
+            #endif
+        }
+
+    }
 }
 
 int main() {
@@ -232,6 +268,11 @@ int main() {
     info.self = info_window;
     windowen_register_draw_callback(info_window, info_draw, &info);
 
+    windowen* pop_up = windowen_new(10, 3, 5, 5);
+    windowen_register_draw_callback(pop_up, pop_up_draw, pop_up);
+    windowen_register_mouse_callback(pop_up, pop_up_mouse, pop_up);
+    windowen_hide(pop_up);
+
     int loop = 1;
     // MEVENT mouse_event = {0};
 
@@ -241,7 +282,8 @@ int main() {
         double elapsed = current_time_millis() - input_start;
 
         // safe call registered input processing
-        windowen_input(main_windowen, input);
+        // windowen_input(main_windowen, input);
+        windowen_input(pop_up, input);
 
         // safe call registered update
         windowen_update(main_windowen);
@@ -249,6 +291,7 @@ int main() {
         // safe call registered draw
         windowen_draw(main_windowen);
         windowen_draw(info_window);
+        windowen_draw(pop_up);
 
         // unhandled input processing
         switch ( input ) {
@@ -261,7 +304,7 @@ int main() {
             break;
         }
 
-        // mvprintw(LINES - 2, 1, "input: %c(%d)", input, input);
+        mvprintw(LINES - 2, 1, "input: %c(%d)", input, input);
 
         int target_delay = (loop_delay - elapsed) * 100;
 
@@ -275,7 +318,9 @@ int main() {
     }
     
     printf("\033[?1003l\n"); // disable report ALL mouse events
+    #if DEBUG == 0
     endwin();
+    #endif
     matrix_delete(main_field.field, main_field.size_y);
     return 0;
 }
