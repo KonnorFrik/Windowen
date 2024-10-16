@@ -1,7 +1,7 @@
 #include "windowen.h"
+
 #include <ncurses.h>
 #include <stdlib.h>
-#include <pthread.h>
 #include <string.h>
 
 windowen* windowen_new(int size_x, int size_y, int pos_x, int pos_y) {
