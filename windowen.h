@@ -58,6 +58,14 @@ typedef struct {
     //      also modify function for drawing with new attrs
 } windowen;
 
+/** @brief Wrap ncurses input (keyboard and mouse) for pass it to windowen_input function
+ */
+typedef struct {
+    int input;
+    MEVENT mouse_event;
+    bool is_mouse_valid;
+} winen_input;
+
 /** @brief Create a new windowen object
  * @param[in] size_x Size of new window for x
  * @param[in] size_y Size of new window for y
@@ -98,6 +106,11 @@ windowen* windowen_register_draw_callback(windowen* obj, callback_draw func, voi
  * @return obj Same windowen object as input
  */
 windowen* windowen_register_update_callback(windowen* obj, callback_update func, void* args);
+
+/** @brief Get input from ncurses
+ * @return obj The winen_input object
+ */
+winen_input windowen_getinput();
 
 /** @brief Smart put string in bounds of window
  * @param[in, out] obj Windowen object for register callback into it
@@ -141,7 +154,7 @@ void windowen_draw(windowen* obj);
  * @param[in, out] obj   Windowen object with registered callback function
  * @param[in]      input input from ncurses
  */
-void windowen_input(windowen* obj, int input);
+void windowen_input(windowen* obj, winen_input input);
 
 /** @breif Delete windowen object
 *

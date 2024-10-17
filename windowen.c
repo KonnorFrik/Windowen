@@ -75,6 +75,20 @@ windowen* windowen_register_update_callback(windowen* obj, callback_update func,
     return obj;
 }
 
+winen_input windowen_getinput() {
+    int input = getch();
+    MEVENT mouse_event = {0};
+    bool is_mouse_valid = getmouse(&mouse_event);
+
+    winen_input obj = {
+        .input = input,
+        .mouse_event = mouse_event,
+        .is_mouse_valid = is_mouse_valid,
+    };
+
+    return obj;
+}
+
 void windowen_addstr(windowen* obj, int x, int y, const char* str) {
     if ( !obj ) {
         return;
@@ -177,18 +191,17 @@ void windowen_draw(windowen* obj) {
     wrefresh(obj->window.obj);
 }
 
-void windowen_input(windowen* obj, int input) {
+void windowen_input(windowen* obj, winen_input input) {
     if ( !obj ) {
         return;
     }
 
-    switch ( input ) {
+    switch ( input.input ) {
         case KEY_MOUSE:
             {
-                MEVENT event = {0};
-                if ( getmouse(&event) == OK ) {
+                if ( input.is_mouse_valid == OK ) {
                     if ( obj->mouse.function ) {
-                        obj->mouse.function(obj->mouse.argument, event);
+                        obj->mouse.function(obj->mouse.argument, input.mouse_event);
                     }
                 }
             }
@@ -198,7 +211,7 @@ void windowen_input(windowen* obj, int input) {
         default:
             {
                 if ( obj->input.function ) {
-                    obj->input.function(obj->input.argument, input);
+                    obj->input.function(obj->input.argument, input.input);
                 }
             }
         break;
