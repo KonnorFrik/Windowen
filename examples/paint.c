@@ -327,6 +327,7 @@ int main() {
 
         mvprintw(LINES - 2, 1, "input: %c(%d)", input.input, input.input);
 
+        // special processing for mouse movement
         int target_delay = (loop_delay - elapsed) * 1000;
 
         if ( target_delay < 0 ) {
