@@ -20,6 +20,11 @@ static windowen* in_focus = NULL;
 
 typedef struct {
     windowen* self;
+    winen_input* input;
+} log_info;
+
+typedef struct {
+    windowen* self;
     int** field;
     int size_x, size_y;
     int cursor_x, cursor_y;
@@ -239,11 +244,86 @@ void pop_up_mouse(void* arg, MEVENT event) {
     }
 }
 
+// void log_input(void* arg, int input) {
+//     if ( input == ERR ) {
+//         return;
+//     }
+//
+//     windowen* obj = (windowen*)arg;
+//     char buf[128] = {0};
+//     snprintf(buf, 128, "Input: %s (%d)", keyname(input), input);
+//
+//     fprintf(stderr, "LOG WINDOW: '%s'\n", buf);
+//
+//     wmove(obj->window.obj, 0, 0);
+//     winsertln(obj->window.obj);
+//     waddstr(obj->window.obj, buf);
+//     wclrtoeol(obj->window.obj);
+// }
+//
+// void log_mouse(void* arg, MEVENT event) {
+//     windowen* obj = (windowen*)arg;
+//     char buf[128] = {0};
+//     snprintf(buf, 128, "Mouse: at X:%d Y:%d (%08x)", event.x, event.y, event.bstate);
+//
+//     fprintf(stderr, "LOG WINDOW: '%s'\n", buf);
+//
+//     wmove(obj->window.obj, 0, 0);
+//     winsertln(obj->window.obj);
+//     waddstr(obj->window.obj, buf);
+//     wclrtoeol(obj->window.obj);
+// }
+
+void log_draw(void* arg) {
+    log_info* obj = (log_info*)arg;
+    char buf[128] = {0};
+    mvwaddstr(obj->self->window.obj, 0, obj->self->window.size_x / 2, "LOG");
+    bool is_print = 0;
+
+    switch ( obj->input->input ) {
+        case KEY_MOUSE:
+            snprintf(buf,
+                     128,
+                     "Mouse: at X:%d Y:%d (%08x)",
+                     obj->input->mouse_event.x,
+                     obj->input->mouse_event.y,
+                     obj->input->mouse_event.bstate
+                     );
+            is_print = 1;
+        break;
+
+        default:
+            snprintf(buf,
+                     128,
+                     "Input: %s (%d)",
+                     keyname(obj->input->input),
+                     obj->input->input
+                     );
+            is_print = 1;
+        break;
+
+        case 0:
+        case ERR:
+        break;
+    }
+
+    if ( is_print ) {
+        // fprintf(stderr, "LOG WINDOW: '%s'\n", buf);
+
+        wmove(obj->self->window.obj, 1, 1);
+        winsertln(obj->self->window.obj);
+        waddstr(obj->self->window.obj, buf);
+        wclrtoeol(obj->self->window.obj);
+        wrefresh(obj->self->window.obj);
+    }
+}
+
 int main() {
     const int loop_delay = 100;
     #if DEBUG == 0
     initscr();
     noecho();
+    cbreak();
     curs_set(0);
     timeout(loop_delay);
     keypad(stdscr, TRUE);
@@ -270,7 +350,7 @@ int main() {
         .field = &main_field,
     };
 
-    windowen* info_window = windowen_new((COLS / 3) * 1, LINES, sx, 0);
+    windowen* info_window = windowen_new((COLS / 3) * 1, LINES / 2, sx, 0);
     info.self = info_window;
     windowen_register_draw_callback(info_window, info_draw, &info);
 
@@ -279,12 +359,20 @@ int main() {
     windowen_register_mouse_callback(pop_up, pop_up_mouse, pop_up);
     windowen_hide(pop_up);
 
+    windowen* log_window = windowen_new((COLS / 3) * 1, LINES / 2, sx, LINES / 2);
+    log_info loger = {.self = log_window, .input = 0};
+    // windowen_register_input_callback(log_window, log_input, &loger);
+    // windowen_register_mouse_callback(log_window, log_mouse, &loger);
+    windowen_register_update_callback(log_window, log_draw, &loger);
+
     int loop = 1;
     in_focus = main_windowen;
+    winen_input input = {0};
+    loger.input = &input;
 
     while ( loop ) {
         double input_start = current_time_millis();
-        winen_input input = windowen_getinput();
+        input = windowen_getinput();
         double elapsed = current_time_millis() - input_start;
 
         // unhandled input processing
@@ -315,14 +403,17 @@ int main() {
         // windowen_input(main_windowen, input);
         // windowen_input(pop_up, input);
         windowen_input(in_focus, input);
+        // windowen_input(log_window, input);
 
         // safe call registered update
         windowen_update(main_windowen);
+        windowen_update(log_window);
 
         // safe call registered draw
         windowen_draw(main_windowen);
         windowen_draw(info_window);
         windowen_draw(pop_up);
+        // windowen_draw(log_window);
 
 
         mvprintw(LINES - 2, 1, "input: %c(%d)", input.input, input.input);
