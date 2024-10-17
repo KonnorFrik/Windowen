@@ -15,8 +15,6 @@ typedef void(*callback_draw)(void*);          ///< Callback signature to registe
 typedef void(*callback_update)(void*);        ///< Callback signature to register for update states 
 
 // TODO:
-// fix input
-//  call to getmouse return error for second call in one loop iteration
 // add moving window function
 
 /** @brief Wrap for WINDOW object from ncurses
