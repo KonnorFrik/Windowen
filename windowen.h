@@ -52,8 +52,7 @@ typedef struct {
 
     // TODO: add enum and function for turn on/off borders
     // add custom borders
-    // add attrs for visible or not window
-    //      also modify function for drawing with new attrs
+    // add attr for clear or not window
 } windowen;
 
 /** @brief Wrap ncurses input (keyboard and mouse) for pass it to windowen_input function
