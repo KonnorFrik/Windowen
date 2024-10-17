@@ -14,9 +14,9 @@
 #include <stdlib.h>
 
 #define DEBUG 0
-#define VERBOSE 1
+#define VERBOSE 0
 
-// static windowen* in_focus = NULL;
+static windowen* in_focus = NULL;
 
 typedef struct {
     windowen* self;
@@ -150,11 +150,17 @@ void field_update(void* arg) {
         #if VERBOSE == 1
         fprintf(stderr, "Spawn at X:%d Y:%d\n", obj->cursor_x, obj->cursor_y);
         #endif
+        bool is_x_in_bounds = obj->cursor_x > 0 && obj->cursor_x < obj->size_x;
+        bool is_y_in_bounds = obj->cursor_y > 0 && obj->cursor_y < obj->size_y;
+        bool is_ascii = isascii(obj->field[obj->cursor_y][obj->cursor_x]);
+        bool is_not_same = obj->field[obj->cursor_y][obj->cursor_x] != obj->spawn_char;
+        bool is_valid_to_spawn = (obj->spawn_char != 0 || obj->spawn_char != -1);
 
-        if ( obj->cursor_x > 0 && obj->cursor_x < obj->size_x &&
-             obj->cursor_y > 0 && obj->cursor_y < obj->size_y && 
-             obj->field[obj->cursor_y][obj->cursor_x] == 0 &&
-             (obj->spawn_char != 0 || obj->spawn_char != -1) ) {
+        if ( is_x_in_bounds &&
+             is_y_in_bounds && 
+             is_ascii &&
+             is_not_same &&
+             is_valid_to_spawn ) {
 
             obj->field[obj->cursor_y][obj->cursor_x] = obj->spawn_char;
             obj->info.drawed_elems++;
@@ -274,16 +280,41 @@ int main() {
     windowen_hide(pop_up);
 
     int loop = 1;
-    // MEVENT mouse_event = {0};
+    in_focus = main_windowen;
 
     while ( loop ) {
         double input_start = current_time_millis();
-        int input = getch();
+        winen_input input = windowen_getinput();
         double elapsed = current_time_millis() - input_start;
+
+        // unhandled input processing
+        switch ( input.input ) {
+            case 'q':
+                loop = 0;
+            break;
+
+            case KEY_MOUSE:
+                if ( input.mouse_event.bstate & BUTTON3_CLICKED ) {
+                    if ( !windowen_isvisible(pop_up) ) {
+                        in_focus = pop_up;
+                    }
+
+                } else if ( input.mouse_event.bstate & BUTTON1_CLICKED ) {
+                    if ( !windowen_isvisible(pop_up) ) {
+                        in_focus = main_windowen;
+                    }
+                }
+            break;
+
+            case ERR:
+            default:
+            break;
+        }
 
         // safe call registered input processing
         // windowen_input(main_windowen, input);
-        windowen_input(pop_up, input);
+        // windowen_input(pop_up, input);
+        windowen_input(in_focus, input);
 
         // safe call registered update
         windowen_update(main_windowen);
@@ -293,20 +324,10 @@ int main() {
         windowen_draw(info_window);
         windowen_draw(pop_up);
 
-        // unhandled input processing
-        switch ( input ) {
-            case 'q':
-                loop = 0;
-            break;
 
-            case ERR:
-            default:
-            break;
-        }
+        mvprintw(LINES - 2, 1, "input: %c(%d)", input.input, input.input);
 
-        mvprintw(LINES - 2, 1, "input: %c(%d)", input, input);
-
-        int target_delay = (loop_delay - elapsed) * 100;
+        int target_delay = (loop_delay - elapsed) * 1000;
 
         if ( target_delay < 0 ) {
             target_delay = 0;
