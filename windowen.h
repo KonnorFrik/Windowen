@@ -117,11 +117,11 @@ winen_input windowen_getinput();
  */
 void windowen_addstr(windowen* obj, int x, int y, const char* str);
 
-/** @brief Make window invisible
+/** @brief Make window visible
  */
 void windowen_show(windowen* obj);
 
-/** @brief Make window ininvisible
+/** @brief Make window invisible
  */
 void windowen_hide(windowen* obj);
 
