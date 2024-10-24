@@ -1,8 +1,15 @@
 #include "windowen.h"
 
+#include <ctype.h>
 #include <ncurses.h>
 #include <stdlib.h>
 #include <string.h>
+
+#define DEBUG 1
+
+#if DEBUG == 1
+#include <stdio.h>
+#endif
 
 windowen* windowen_new(int size_x, int size_y, int pos_x, int pos_y) {
     windowen* obj = calloc(1, sizeof(windowen));
@@ -25,7 +32,7 @@ windowen* windowen_new(int size_x, int size_y, int pos_x, int pos_y) {
         obj->window.position_y = pos_y;
         obj->window.obj = newwin(size_y, size_x, pos_y, pos_x);
 
-        obj->settings.is_visible = 1;
+        // obj->settings.is_visible = 1;
     }
 
     return obj;
@@ -89,6 +96,7 @@ winen_input windowen_getinput() {
     return obj;
 }
 
+// TODO: rewrite func - change windowen* to WINDOW* and max_size_x/y
 void windowen_addstr(windowen* obj, int x, int y, const char* str) {
     if ( !obj ) {
         return;
@@ -119,16 +127,6 @@ void windowen_addstr(windowen* obj, int x, int y, const char* str) {
     strncpy(buf, str, len);
     buf[len] = 0;
 
-    /*
-    * strlen = 11
-    * size_x = 10
-    * real size_x = 8
-    * x = 2
-    * | hello w|rld
-    * | hell...|
-    * real_size_x - (x - 1) 
-    *   
-    */
     size_t can_fit_from_x = ((obj->window.size_x - 2) - (x - 1));
     if ( len > can_fit_from_x && can_fit_from_x ) {
         buf[can_fit_from_x--] = 0;
@@ -141,33 +139,8 @@ void windowen_addstr(windowen* obj, int x, int y, const char* str) {
     mvwaddstr(obj->window.obj, y, x, buf);
 }
 
-void windowen_show(windowen* obj) {
-    if ( !obj ) {
-        return;
-    }
-
-    obj->settings.is_visible = 1;
-}
-
-void windowen_hide(windowen* obj) {
-    if ( !obj ) {
-        return;
-    }
-
-    obj->settings.is_visible = 0;
-    wclear(obj->window.obj);
-}
-
-int windowen_isvisible(windowen* obj) {
-    if ( !obj ) {
-        return 0;
-    }
-
-    return obj->settings.is_visible;
-}
-
 void windowen_update(windowen* obj) {
-    if ( !obj || !obj->settings.is_visible ) {
+    if ( !obj ) {
         return;
     }
 
@@ -177,7 +150,7 @@ void windowen_update(windowen* obj) {
 }
 
 void windowen_draw(windowen* obj) {
-    if ( !obj || !obj->settings.is_visible ) {
+    if ( !obj ) {
         return;
     }
 
@@ -224,7 +197,159 @@ void windowen_delete(windowen* obj) {
         return;
     }
 
-    delwin(obj->window.obj);
+    if ( obj->window.obj ) {
+        delwin(obj->window.obj);
+    }
+
     free(obj);
 }
 
+/* Possible ( and bad ) input: text
+ * ""
+ * "." delim = '.'
+ * "hello.world."
+*/
+int popup_text(popup_params params) {
+    if ( !params.text || !isascii(params.delimiter) ) {
+        return 1;
+    }
+
+    int status = 0;
+    int max_win_size = 3;
+    int text_len = 0;
+    int rows = 0;
+    const char* text_copy = params.text;
+
+    if ( params.title ) {
+        int len = strlen(params.title);
+
+        if ( len > max_win_size && len < params.max_x ) {
+            max_win_size = len;
+        }
+
+    } else {
+        params.title = "";
+    }
+
+    if ( !text_copy ) {
+        text_copy = "";
+    }
+
+    text_len = strlen(text_copy);
+
+    if ( text_len ) {
+        rows++;
+    }
+
+    char text_buffer[text_len + 1];
+    strncpy(text_buffer, text_copy, text_len + 1);
+
+    // parse text and create array
+    for (int i = 0; i < text_len; ++i) {
+        if ( text_buffer[i] == params.delimiter && i < (text_len - 1) ) {
+            rows++;
+        } 
+    }
+
+    char delim_str[2] = {0};
+    sprintf(delim_str, "%c", params.delimiter);
+    // init array with splitted text
+    char* text_splitted[rows];
+    memset(text_splitted, 0, rows);
+    int was_delim = 1;
+    int rows_writed = 0;
+
+    for (int i = 0, row_start_ind = 0, row = 0; i < text_len; ++i) {
+        if ( text_buffer[i] == params.delimiter ) {
+            was_delim = 1;
+            text_buffer[i] = 0;
+            int row_len = i - row_start_ind;
+
+            if ( row_len > max_win_size && row_len < params.max_x ) {
+                max_win_size = row_len;
+            }
+
+        } else if ( isascii(text_buffer[i]) && was_delim ) {
+            was_delim = 0;
+            text_splitted[row++] = text_buffer + i;
+            rows_writed++;
+            row_start_ind = i;
+        } 
+    }
+
+    if ( (max_win_size + 2) < params.max_x ) {
+        max_win_size += 2; // 2 for borders
+    }
+
+    #if DEBUG == 1
+    fprintf(stderr, "Title: '%s'\n", params.title);
+    fprintf(stderr, "Text arg: '%s'\n", params.text);
+    fprintf(stderr, "Text len: %d\n", text_len);
+    fprintf(stderr, "Rows: %d\n", rows_writed);
+    fprintf(stderr, "Win size: %d\n", max_win_size);
+    fprintf(stderr, "Splitted text:\n");
+    for (int i = 0; i < rows_writed; ++i) {
+        fprintf(stderr, "%d - '%s'\n", i, text_splitted[i]);
+    }
+    #endif
+
+    // create window 
+    WINDOW* win = newwin(params.max_y, max_win_size, 0, params.max_x / 2 - max_win_size / 2);
+
+    int input = 0;
+    int title_x = max_win_size / 2 - strlen(params.title) / 2;
+    int start_ind = 0;
+    int end_ind = rows_writed - 1;
+    int lines = params.max_y - 2;
+
+    #if DEBUG == 1
+    fprintf(stderr, "Title x: '%d'\n", title_x);
+    #endif
+
+    // show text and process input
+    while ( input != params.key_close ) {
+        int y = 1, x = 1;
+        wclear(win);
+        box(win, 0, 0);
+        mvwaddstr(win, 0, title_x, params.title);
+
+        if ( input == params.key_scroll_up ) {
+            start_ind++;
+
+        } else if ( input == params.key_scroll_down ) {
+            start_ind--;
+        }
+
+        if ( start_ind >= rows_writed ) {
+            start_ind = rows_writed - 1;
+        }
+
+        if ( start_ind < 0 ) {
+            start_ind = 0;
+        }
+
+        end_ind = start_ind + lines;
+
+        if ( end_ind >= rows_writed ) {
+            end_ind = rows_writed - 1;
+        }
+
+        #if DEBUG == 1
+        fprintf(stderr, "Writed: %d\n", rows_writed);
+        fprintf(stderr, "Start : %d\n", start_ind);
+        fprintf(stderr, "End   : %d\n", end_ind);
+        #endif
+
+        for (int i = start_ind; i <= end_ind; ++i) {
+            mvwaddstr(win, y++, x, text_splitted[i]);
+        }
+
+        refresh();
+        wrefresh(win);
+
+        input = getch();
+    }
+
+
+    return status;
+}

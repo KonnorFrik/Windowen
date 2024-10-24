@@ -22,6 +22,12 @@ all: $(NAMES)
 paint: paint.o $(LIB_OBJ)
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
+split_test: split_test.o $(LIB_OBJ)
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+
+scroll_text: scroll_text.o $(LIB_OBJ)
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+
 show:
 	@echo $(LIB_SRC)
 	@echo $(LIB_OBJ)

@@ -17,6 +17,23 @@ typedef void(*callback_update)(void*);        ///< Callback signature to registe
 // TODO:
 // add moving window function
 
+// TODO:
+// ?[ ] write a struct with params for use special functions
+// [ ] special functions:
+//      [x] PopUpText - print a given text splitted by rows at newly cleated window with scrolling, wait for any input
+//      [ ] AskString - create new window and ask (with showing question) for input with max len
+//      [ ] Ask...
+
+typedef struct {
+    int max_y, max_x;
+    int delimiter;
+    const char* text;
+    int key_scroll_up;
+    int key_scroll_down;
+    int key_close;
+    const char* title;
+} popup_params;
+
 /** @brief Wrap for WINDOW object from ncurses
  */
 typedef struct {
@@ -46,9 +63,8 @@ typedef struct {
         int position_x, position_y;
     } window;
 
-    struct {
-        int is_visible;
-    } settings;
+    // struct {
+    // } settings;
 
     // TODO: add enum and function for turn on/off borders
     // add custom borders
@@ -96,14 +112,6 @@ windowen* windowen_register_mouse_callback(windowen* obj, callback_mouse func, v
  */
 windowen* windowen_register_draw_callback(windowen* obj, callback_draw func, void* args);
 
-/** @brief Register given func as update processing
- * @param[in, out] obj  Windowen object for register callback into it
- * @param[in]      func Callback function
- * @param[in]      args Arguments for pass them into callback
- * @return obj Same windowen object as input
- */
-windowen* windowen_register_update_callback(windowen* obj, callback_update func, void* args);
-
 /** @brief Get input from ncurses
  * @return obj The winen_input object
  */
@@ -116,20 +124,6 @@ winen_input windowen_getinput();
  * @param[in]      str String for draw
  */
 void windowen_addstr(windowen* obj, int x, int y, const char* str);
-
-/** @brief Make window visible
- */
-void windowen_show(windowen* obj);
-
-/** @brief Make window invisible
- */
-void windowen_hide(windowen* obj);
-
-/** @breif Return status is window visible
- * @param[in, out] obj Windowen object
- * @return status 1 for VISIBLE, 0 otherwise
- */
-int windowen_isvisible(windowen* obj);
 
 /** @brief Safe call registered update function
  * @param[in, out] obj Windowen object with registered callback function
@@ -160,5 +154,14 @@ void windowen_input(windowen* obj, winen_input input);
 * @param[in, out] obj windowen object for delete
 */
 void windowen_delete(windowen* obj);
+
+/** @brief Create a new window with max x or max len of one line and max y, show given text splitted
+ *
+ * Allow to scroll text
+ *
+ * @param params Struct with config
+ * @return status 0 for OK, any otherwise mean error
+ */
+int popup_text(popup_params params);
 
 #endif /* __NCURSES_GUI_MODULE__ */
