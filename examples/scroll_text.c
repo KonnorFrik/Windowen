@@ -15,7 +15,7 @@ int main() {
         .max_x = COLS,
         .max_y = LINES,
         .delimiter = '.',
-        .text = lorem_ipsum,
+        .text = "Hello.World.Bye.Curses",
         .key_scroll_up = 'w',
         .key_scroll_down = 's',
     };

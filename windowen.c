@@ -214,8 +214,10 @@ int popup_text(popup_params params) {
         return 1;
     }
 
-    int status = 0;
-    int max_win_size = 3;
+    char info_line[19] = {0};
+    sprintf(info_line, "Quit:%c Up:%c Down:%c", params.key_close, params.key_scroll_up, params.key_scroll_down);
+    // int status = 0;
+    int max_win_size = 19; // max length of info line
     int text_len = 0;
     int rows = 0;
     const char* text_copy = params.text;
@@ -312,6 +314,7 @@ int popup_text(popup_params params) {
         wclear(win);
         box(win, 0, 0);
         mvwaddstr(win, 0, title_x, params.title);
+        mvwaddstr(win, params.max_y - 1, 1, info_line);
 
         if ( input == params.key_scroll_up ) {
             start_ind++;
@@ -327,7 +330,7 @@ int popup_text(popup_params params) {
         if ( start_ind < 0 ) {
             start_ind = 0;
         }
-
+        
         end_ind = start_ind + lines;
 
         if ( end_ind >= rows_writed ) {
@@ -351,5 +354,5 @@ int popup_text(popup_params params) {
     }
 
 
-    return status;
+    return 0;
 }
