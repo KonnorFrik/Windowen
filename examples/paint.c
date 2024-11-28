@@ -1,7 +1,6 @@
 /* some paint
  * 
  * 'q' - exit
- * 'h' 'j' 'k' 'l' - move
  */
 
 #define _DEFAULT_SOURCE
@@ -195,6 +194,7 @@ void field_update(void* arg) {
 
 void field_draw(void* arg) {
     field* obj = (field*)arg;
+    box(obj->self->window.obj, 0, 0);
 
     for (int r = 0; r < obj->size_y; ++r) {
         for (int c = 0; c < obj->size_x; ++c) {
@@ -211,6 +211,10 @@ void field_draw(void* arg) {
 
 void info_draw(void* arg) {
     info_t* obj = (info_t*)arg;
+    wmove(obj->self->window.obj, 0, 0);
+    wclrtobot(obj->self->window.obj);
+    box(obj->self->window.obj, 0, 0);
+
     int max_x = getmaxx(obj->self->window.obj);
     int y = 1;
     int x = 1;
@@ -345,7 +349,7 @@ int main() {
     noecho();
     cbreak();
     curs_set(0);
-    timeout(loop_delay);
+    timeout(1);
     keypad(stdscr, TRUE);
     mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, NULL);
     printf("\033[?1003h\n"); // enable report ALL mouse events
@@ -391,9 +395,9 @@ int main() {
     loger.input = &input;
 
     while ( loop ) {
-        double input_start = current_time_millis();
+        /*double input_start = current_time_millis();*/
         input = windowen_getinput();
-        double elapsed = current_time_millis() - input_start;
+        /*double elapsed = current_time_millis() - input_start;*/
 
         // unhandled input processing
         switch ( input.input ) {
@@ -439,14 +443,14 @@ int main() {
         mvprintw(LINES - 2, 1, "input: %c(%d)", input.input, input.input);
 
         // special processing for mouse movement
-        int target_delay = (loop_delay - elapsed) * 1000;
+        /*int target_delay = (loop_delay - elapsed) * 1000;*/
 
-        if ( target_delay < 0 ) {
-            target_delay = 0;
-        }
+        /*if ( target_delay < 0 ) {*/
+        /*    target_delay = 0;*/
+        /*}*/
 
         // fprintf(stderr, "target_delay: %d microSec\n", target_delay);
-        usleep(target_delay);
+        /*usleep(target_delay);*/
         flushinp();
     }
     

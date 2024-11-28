@@ -154,8 +154,8 @@ void windowen_draw(windowen* obj) {
         return;
     }
 
-    wclear(obj->window.obj);
-    box(obj->window.obj, 0, 0);
+    /*wclear(obj->window.obj);*/
+    /*box(obj->window.obj, 0, 0);*/
 
     if ( obj->draw.function ) {
         obj->draw.function(obj->draw.argument);
