@@ -15,6 +15,8 @@
 #define DEBUG 0
 #define VERBOSE 0
 
+#define MOUSE_MOVE 268435456
+
 static windowen* in_focus = NULL;
 
 typedef struct {
@@ -76,37 +78,37 @@ void field_input(void* arg, int input) {
     field* obj = (field*)arg;
     
     switch ( input ) {
-        case 'h':
-            obj->cursor_x--;
-            
-            if ( obj->cursor_x < 1 ) {
-                obj->cursor_x = 1;
-            }
-        break;
-
-        case 'j':
-            obj->cursor_y++;
-            
-            if ( obj->cursor_y >= obj->size_y ) {
-                obj->cursor_y = obj->size_y - 1;
-            }
-        break;
-
-        case 'k':
-            obj->cursor_y--;
-            
-            if ( obj->cursor_y < 1 ) {
-                obj->cursor_y = 1;
-            }
-        break;
-
-        case 'l':
-            obj->cursor_x++;
-            
-            if ( obj->cursor_x >= obj->size_x ) {
-                obj->cursor_x = obj->size_x - 1;
-            }
-        break;
+        /*case 'h':*/
+        /*    obj->cursor_x--;*/
+        /**/
+        /*    if ( obj->cursor_x < 1 ) {*/
+        /*        obj->cursor_x = 1;*/
+        /*    }*/
+        /*break;*/
+        /**/
+        /*case 'j':*/
+        /*    obj->cursor_y++;*/
+        /**/
+        /*    if ( obj->cursor_y >= obj->size_y ) {*/
+        /*        obj->cursor_y = obj->size_y - 1;*/
+        /*    }*/
+        /*break;*/
+        /**/
+        /*case 'k':*/
+        /*    obj->cursor_y--;*/
+        /**/
+        /*    if ( obj->cursor_y < 1 ) {*/
+        /*        obj->cursor_y = 1;*/
+        /*    }*/
+        /*break;*/
+        /**/
+        /*case 'l':*/
+        /*    obj->cursor_x++;*/
+        /**/
+        /*    if ( obj->cursor_x >= obj->size_x ) {*/
+        /*        obj->cursor_x = obj->size_x - 1;*/
+        /*    }*/
+        /*break;*/
 
         case '\n':
             for (int r = 0; r < obj->size_y; ++r) {
@@ -207,6 +209,8 @@ void field_draw(void* arg) {
             }
         }
     }
+        move(LINES - 1, 1);
+        printw("|Brush: '%c'|", obj->spawn_char);
 }
 
 void info_draw(void* arg) {
@@ -237,66 +241,6 @@ void info_draw(void* arg) {
     windowen_addstr(obj->self, x, y--, "Mouse moving - drawing");
     windowen_addstr(obj->self, x, y--, "Click - turn on/off drawing");
 }
-
-// void pop_up_draw(void* arg) {
-//     windowen* obj = (windowen*)arg;
-//     mvwaddch(obj->window.obj, 0, obj->window.size_x - 1, 'X');
-//     windowen_addstr(obj, 1, 1, "Hello)");
-// }
-
-// void pop_up_mouse(void* arg, MEVENT event) {
-//     windowen* obj = (windowen*)arg;
-//
-//     if ( event.bstate & BUTTON3_CLICKED ) {
-//         windowen_show(obj);
-//         #if VERBOSE == 1
-//         fprintf(stderr, "POP UP is show\n");
-//         #endif
-//         // add move window
-//
-//     } else if ( event.bstate & BUTTON1_CLICKED && windowen_isvisible(obj) ) {
-//         int x = event.x, y = event.y;
-//         if ( wmouse_trafo(obj->window.obj, &y, &x, FALSE) == TRUE &&
-//              (x == obj->window.size_x - 1 && y == 0) ) {
-//             windowen_hide(obj);
-//
-//             #if VERBOSE == 1
-//             fprintf(stderr, "POP UP M1 at X:%d Y:%d\n", x, y);
-//             #endif
-//         }
-//
-//     }
-// }
-
-// void log_input(void* arg, int input) {
-//     if ( input == ERR ) {
-//         return;
-//     }
-//
-//     windowen* obj = (windowen*)arg;
-//     char buf[128] = {0};
-//     snprintf(buf, 128, "Input: %s (%d)", keyname(input), input);
-//
-//     fprintf(stderr, "LOG WINDOW: '%s'\n", buf);
-//
-//     wmove(obj->window.obj, 0, 0);
-//     winsertln(obj->window.obj);
-//     waddstr(obj->window.obj, buf);
-//     wclrtoeol(obj->window.obj);
-// }
-//
-// void log_mouse(void* arg, MEVENT event) {
-//     windowen* obj = (windowen*)arg;
-//     char buf[128] = {0};
-//     snprintf(buf, 128, "Mouse: at X:%d Y:%d (%08x)", event.x, event.y, event.bstate);
-//
-//     fprintf(stderr, "LOG WINDOW: '%s'\n", buf);
-//
-//     wmove(obj->window.obj, 0, 0);
-//     winsertln(obj->window.obj);
-//     waddstr(obj->window.obj, buf);
-//     wclrtoeol(obj->window.obj);
-// }
 
 void log_draw(void* arg) {
     log_info* obj = (log_info*)arg;
@@ -342,6 +286,29 @@ void log_draw(void* arg) {
     }
 }
 
+void on_save_button_click(void* arg) {
+    field* fld = (field*)arg;
+    const char* filename = "art1.txt";
+    FILE* file = fopen(filename, "wt");
+    if ( !file ) {
+        return;
+    }
+
+    for (int y = 0; y < fld->size_y; ++y) {
+        for (int x = 0; x < fld->size_x; ++x) {
+            if ( fld->field[y][x] ) {
+                fprintf(file, "%c", fld->field[y][x]);
+            } else {
+                fprintf(file, "%c", ' ');
+            }
+        }
+
+        fprintf(file, "%c", '\n');
+    }
+
+    fclose(file);
+}
+
 int main() {
     const int loop_delay = 100;
     #if DEBUG == 0
@@ -352,10 +319,12 @@ int main() {
     timeout(1);
     keypad(stdscr, TRUE);
     mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, NULL);
+    printf("\033[?12l");
     printf("\033[?1003h\n"); // enable report ALL mouse events
     #endif /* DEBUG == 0 */
 
-    size_t sx = (COLS / 3) * 2, sy = LINES;
+    /*size_t sx = (COLS / 3) * 2, sy = LINES;*/
+    size_t sx = 82, sy = 27;
     windowen* main_windowen = windowen_new(sx, sy, 0, 0);
     field main_field = {
         .size_x = sx - 1,
@@ -368,36 +337,32 @@ int main() {
     windowen_register_input_callback(main_windowen, field_input, &main_field);
     windowen_register_mouse_callback(main_windowen, field_mouse, &main_field);
     windowen_register_draw_callback(main_windowen, field_draw, &main_field);
-    // windowen_register_update_callback(main_windowen, field_update, &main_field);
 
     info_t info = {
         .field = &main_field,
     };
 
-    windowen* info_window = windowen_new((COLS / 3) * 1, LINES / 2, sx, 0);
+    windowen* info_window = windowen_new(COLS - 81, LINES / 2, sx, 0);
     info.self = info_window;
     windowen_register_draw_callback(info_window, info_draw, &info);
 
-    // windowen* pop_up = windowen_new(10, 3, 5, 5);
-    // windowen_register_draw_callback(pop_up, pop_up_draw, pop_up);
-    // windowen_register_mouse_callback(pop_up, pop_up_mouse, pop_up);
-    // windowen_hide(pop_up);
-
-    windowen* log_window = windowen_new((COLS / 3) * 1, LINES / 2, sx, LINES / 2);
-    log_info loger = {.self = log_window, .input = 0};
-    // windowen_register_input_callback(log_window, log_input, &loger);
-    // windowen_register_mouse_callback(log_window, log_mouse, &loger);
-    // windowen_register_update_callback(log_window, log_draw, &loger);
+    winen_button_params save_btn_params = {
+        .text = "Save",
+        .size_x = 4,
+        .size_y = 3,
+        .position_x = info_window->window.position_x,
+        .position_y = info_window->window.position_y + info_window->window.size_y + 1,
+    };
+    winen_button* save_button = winenbtn_new(save_btn_params);
+    winenbtn_register_action(save_button, on_save_button_click, &main_field);
 
     int loop = 1;
     in_focus = main_windowen;
     winen_input input = {0};
-    loger.input = &input;
+    int cursor_x = 0, cursor_y = 0;
 
     while ( loop ) {
-        /*double input_start = current_time_millis();*/
         input = windowen_getinput();
-        /*double elapsed = current_time_millis() - input_start;*/
 
         // unhandled input processing
         switch ( input.input ) {
@@ -405,18 +370,14 @@ int main() {
                 loop = 0;
             break;
 
-            // case KEY_MOUSE:
-            //     if ( input.mouse_event.bstate & BUTTON3_CLICKED ) {
-            //         if ( !windowen_isvisible(pop_up) ) {
-            //             in_focus = pop_up;
-            //         }
-            //
-            //     } else if ( input.mouse_event.bstate & BUTTON1_CLICKED ) {
-            //         if ( !windowen_isvisible(pop_up) ) {
-            //             in_focus = main_windowen;
-            //         }
-            //     }
-            // break;
+            /*case KEY_MOUSE:*/
+            /*    switch ( input.mouse_event.bstate ) {*/
+            /*        case MOUSE_MOVE:*/
+            /*            cursor_x = input.mouse_event.x;*/
+            /*            cursor_y = input.mouse_event.y;*/
+            /*        break;*/
+            /*    }*/
+            /*break;*/
 
             case ERR:
             default:
@@ -424,33 +385,17 @@ int main() {
         }
 
         // safe call registered input processing
-        // windowen_input(main_windowen, input);
-        // windowen_input(pop_up, input);
         windowen_input(in_focus, input);
-        // windowen_input(log_window, input);
+        winenbtn_update(save_button, input);
 
         // safe call registered update
         windowen_update(main_windowen);
-        windowen_update(log_window);
+        /*windowen_update(log_window);*/
 
         // safe call registered draw
         windowen_draw(main_windowen);
         windowen_draw(info_window);
-        // windowen_draw(pop_up);
-        // windowen_draw(log_window);
-
-
-        mvprintw(LINES - 2, 1, "input: %c(%d)", input.input, input.input);
-
-        // special processing for mouse movement
-        /*int target_delay = (loop_delay - elapsed) * 1000;*/
-
-        /*if ( target_delay < 0 ) {*/
-        /*    target_delay = 0;*/
-        /*}*/
-
-        // fprintf(stderr, "target_delay: %d microSec\n", target_delay);
-        /*usleep(target_delay);*/
+        winenbtn_draw(save_button);
         flushinp();
     }
     

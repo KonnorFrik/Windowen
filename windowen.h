@@ -8,11 +8,17 @@
 #define __NCURSES_GUI_MODULE__
 
 #include <ncurses.h>
+///< Callback signature to register for input processing by window
+typedef void(*callback_input)(void*, int);
+///< Callback signature to register for mouse input processing by window
+typedef void(*callback_mouse)(void*, MEVENT);
+///< Callback signature to register for drawing
+typedef void(*callback_draw)(void*);
+///< Callback signature to register for update states
+typedef void(*callback_update)(void*);
 
-typedef void(*callback_input)(void*, int);    ///< Callback signature to register for input processing by window
-typedef void(*callback_mouse)(void*, MEVENT); ///< Callback signature to register for mouse input processing by window
-typedef void(*callback_draw)(void*);          ///< Callback signature to register for drawing 
-typedef void(*callback_update)(void*);        ///< Callback signature to register for update states 
+///< Callback signature to register for click button
+typedef void(*callback_button_click)(void*);
 
 // TODO:
 // add moving window function
@@ -78,6 +84,36 @@ typedef struct {
     MEVENT mouse_event;
     bool is_mouse_valid;
 } winen_input;
+
+typedef struct {
+    struct {
+        callback_button_click function;
+        void* argument;
+    } action;
+
+    struct {
+        WINDOW* obj;
+        int size_x, size_y;
+        int position_x, position_y;
+    } window;
+
+    const char* text;
+    bool is_borders;
+} winen_button;
+
+typedef struct {
+    int size_y, size_x;
+    int position_y, position_x;
+    char* text;
+    bool is_borders;
+} winen_button_params;
+
+winen_button* winenbtn_new(winen_button_params params);
+void winenbtn_register_action(winen_button* self, callback_button_click callback, void* arg);
+void winenbtn_draw(winen_button* self);
+void winenbtn_update(winen_button* self, winen_input input);
+void winenbtn_delete(winen_button* self);
+
 
 /** @brief Create a new windowen object
  * @param[in] size_x Size of new window for x
