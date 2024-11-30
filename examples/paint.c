@@ -74,7 +74,7 @@ double current_time_millis() {
   return (double)(tv.tv_sec) * 1000 + (double)(tv.tv_usec) / 1000;
 }
 
-void field_input(void* arg, int input) {
+void* field_input(void* arg, int input) {
     field* obj = (field*)arg;
     
     switch ( input ) {
@@ -149,9 +149,11 @@ void field_input(void* arg, int input) {
             obj->info.drawed_elems++;
         }
     }
+
+    return NULL;
 }
 
-void field_mouse(void* arg, MEVENT event) {
+void* field_mouse(void* arg, MEVENT event) {
     field* obj = (field*)arg;
 
     if ( event.bstate & BUTTON1_CLICKED ) {
@@ -167,32 +169,34 @@ void field_mouse(void* arg, MEVENT event) {
         obj->cursor_x = event.x;
         obj->cursor_y = event.y;
     }
+
+    return NULL;
 }
 
-void field_update(void* arg) {
-    field* obj = (field*)arg;
-
-    if ( obj->is_spawn ) {
-        #if VERBOSE == 1
-        fprintf(stderr, "Spawn at X:%d Y:%d\n", obj->cursor_x, obj->cursor_y);
-        #endif
-        bool is_x_in_bounds = obj->cursor_x > 0 && obj->cursor_x < obj->size_x;
-        bool is_y_in_bounds = obj->cursor_y > 0 && obj->cursor_y < obj->size_y;
-        bool is_ascii = isascii(obj->field[obj->cursor_y][obj->cursor_x]);
-        bool is_not_same = obj->field[obj->cursor_y][obj->cursor_x] != obj->spawn_char;
-        bool is_valid_to_spawn = (obj->spawn_char != 0 || obj->spawn_char != -1);
-
-        if ( is_x_in_bounds &&
-             is_y_in_bounds && 
-             is_ascii &&
-             is_not_same &&
-             is_valid_to_spawn ) {
-
-            obj->field[obj->cursor_y][obj->cursor_x] = obj->spawn_char;
-            obj->info.drawed_elems++;
-        }
-    }
-}
+/*void field_update(void* arg) {*/
+/*    field* obj = (field*)arg;*/
+/**/
+/*    if ( obj->is_spawn ) {*/
+/*        #if VERBOSE == 1*/
+/*        fprintf(stderr, "Spawn at X:%d Y:%d\n", obj->cursor_x, obj->cursor_y);*/
+/*        #endif*/
+/*        bool is_x_in_bounds = obj->cursor_x > 0 && obj->cursor_x < obj->size_x;*/
+/*        bool is_y_in_bounds = obj->cursor_y > 0 && obj->cursor_y < obj->size_y;*/
+/*        bool is_ascii = isascii(obj->field[obj->cursor_y][obj->cursor_x]);*/
+/*        bool is_not_same = obj->field[obj->cursor_y][obj->cursor_x] != obj->spawn_char;*/
+/*        bool is_valid_to_spawn = (obj->spawn_char != 0 || obj->spawn_char != -1);*/
+/**/
+/*        if ( is_x_in_bounds &&*/
+/*             is_y_in_bounds && */
+/*             is_ascii &&*/
+/*             is_not_same &&*/
+/*             is_valid_to_spawn ) {*/
+/**/
+/*            obj->field[obj->cursor_y][obj->cursor_x] = obj->spawn_char;*/
+/*            obj->info.drawed_elems++;*/
+/*        }*/
+/*    }*/
+/*}*/
 
 void field_draw(void* arg) {
     field* obj = (field*)arg;
@@ -286,12 +290,13 @@ void log_draw(void* arg) {
     }
 }
 
-void on_save_button_click(void* arg) {
+void* on_save_button_click(void* arg) {
     field* fld = (field*)arg;
     const char* filename = "art1.txt";
     FILE* file = fopen(filename, "wt");
+
     if ( !file ) {
-        return;
+        return NULL;
     }
 
     for (int y = 0; y < fld->size_y; ++y) {
@@ -307,6 +312,7 @@ void on_save_button_click(void* arg) {
     }
 
     fclose(file);
+    return NULL;
 }
 
 int main() {
@@ -319,7 +325,7 @@ int main() {
     timeout(1);
     keypad(stdscr, TRUE);
     mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, NULL);
-    printf("\033[?12l");
+    /*printf("\033[?12l");*/
     printf("\033[?1003h\n"); // enable report ALL mouse events
     #endif /* DEBUG == 0 */
 
@@ -390,7 +396,7 @@ int main() {
         winenbtn_input(save_button, input);
 
         // safe call registered update
-        windowen_update(main_windowen);
+        /*windowen_update(main_windowen);*/
         /*windowen_update(log_window);*/
 
         // safe call registered draw

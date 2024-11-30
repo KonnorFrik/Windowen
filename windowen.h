@@ -9,16 +9,16 @@
 
 #include <ncurses.h>
 ///< Callback signature to register for input processing by window
-typedef void(*callback_input)(void*, int);
+typedef void*(*callback_input)(void*, int);
 ///< Callback signature to register for mouse input processing by window
-typedef void(*callback_mouse)(void*, MEVENT);
+typedef void*(*callback_mouse)(void*, MEVENT);
 ///< Callback signature to register for drawing
 typedef void(*callback_draw)(void*);
 ///< Callback signature to register for update states
 typedef void(*callback_update)(void*);
 
 ///< Callback signature to register for click button
-typedef void(*callback_button_click)(void*);
+typedef void*(*callback_button_click)(void*);
 ///< Callback signature to register draw function for button
 typedef void(*callback_button_draw)(void*);
 
@@ -133,8 +133,9 @@ void winenbtn_draw(winenbtn* self);
 /** @brief Handles whether a button was pressed
  * @param[in, out] self Pointer to valid winenbtn object
  * @param input Struct with input data @see windowen_getinput
+ * @return user-defined arg
  */
-void winenbtn_input(winenbtn* self, winen_input input);
+void* winenbtn_input(winenbtn* self, winen_input input);
 
 /** @brief Delete a button object
  * @param[in, out] self Pointer to valid winenbtn object
@@ -191,7 +192,7 @@ void windowen_addstr(windowen* obj, int x, int y, const char* str);
 /** @brief Safe call registered update function
  * @param[in, out] obj Windowen object with registered callback function
  */
-void windowen_update(windowen* obj);
+/*void windowen_update(windowen* obj);*/
 
 /** @brief Safe call registered draw function
  *
@@ -207,8 +208,9 @@ void windowen_draw(windowen* obj);
 /** @brief Safe call registered input processing 
  * @param[in, out] obj   Windowen object with registered callback function
  * @param[in]      input input from ncurses
+ * @return user-defined arg
  */
-void windowen_input(windowen* obj, winen_input input);
+void* windowen_input(windowen* obj, winen_input input);
 
 /** @breif Delete windowen object
 *

@@ -1,3 +1,4 @@
+#define _DEFAULT_SOURCE
 #include "windowen.h"
 
 #include <ctype.h>
@@ -164,17 +165,18 @@ void windowen_draw(windowen* obj) {
     wrefresh(obj->window.obj);
 }
 
-void windowen_input(windowen* obj, winen_input input) {
+void* windowen_input(windowen* obj, winen_input input) {
     if ( !obj ) {
-        return;
+        return NULL;
     }
+    void* to_ret = NULL;
 
     switch ( input.input ) {
         case KEY_MOUSE:
             {
                 if ( input.is_mouse_valid == OK ) {
                     if ( obj->mouse.function ) {
-                        obj->mouse.function(obj->mouse.argument, input.mouse_event);
+                        to_ret = obj->mouse.function(obj->mouse.argument, input.mouse_event);
                     }
                 }
             }
@@ -184,12 +186,13 @@ void windowen_input(windowen* obj, winen_input input) {
         default:
             {
                 if ( obj->input.function ) {
-                    obj->input.function(obj->input.argument, input.input);
+                    to_ret = obj->input.function(obj->input.argument, input.input);
                 }
             }
         break;
     }
 
+    return to_ret;
 }
 
 void windowen_delete(windowen* obj) {
@@ -411,10 +414,12 @@ void winenbtn_draw(winenbtn* self) {
     }
 }
 
-void winenbtn_input(winenbtn* self, winen_input input) {
+void* winenbtn_input(winenbtn* self, winen_input input) {
     if ( !self ) {
-        return;
+        return NULL;
     }
+
+    void* to_ret = NULL;
 
     switch ( input.input ) {
         case KEY_MOUSE:
@@ -427,13 +432,15 @@ void winenbtn_input(winenbtn* self, winen_input input) {
                      input.mouse_event.y < self->window.position_y + self->window.size_y
                      ) {
                     if ( self->action.function ) {
-                        self->action.function(self->action.argument);
+                        to_ret = self->action.function(self->action.argument);
                     }
                 }
             }
 
         break;
     }
+
+    return to_ret;
 }
 
 void winenbtn_delete(winenbtn* self) {

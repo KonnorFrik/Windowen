@@ -16,8 +16,8 @@ LIB_OBJ = $(LIB_SRC:.c=.o)
 all: $(NAMES)
 	@echo "THE ALL TARGET"
 
-# %.o: %.c
-# 	$(CC) $(CFLAGS) -c $^ -o
+input_return: input_return.o $(LIB_OBJ)
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 paint: paint.o $(LIB_OBJ)
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
