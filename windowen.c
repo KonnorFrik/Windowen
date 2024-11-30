@@ -352,36 +352,35 @@ int popup_text(popup_params params) {
 
         input = getch();
     }
-
-
     return 0;
 }
 
 
-winen_button* winenbtn_new(winen_button_params params) {
-    winen_button* obj = calloc(1, sizeof(winen_button));
+winenbtn* winenbtn_new(winenbtn_params params) {
+    winenbtn* self = calloc(1, sizeof(winenbtn));
 
-    if ( obj ) {
-        obj->window.obj = newwin(params.size_y, params.size_x, params.position_y, params.position_x);
-        obj->window.size_y = params.size_y;
-        obj->window.size_x = params.size_x;
-        obj->window.position_y = params.position_y;
-        obj->window.position_x = params.position_x;
+    if ( self ) {
+        self->window.obj = newwin(params.size_y, params.size_x, params.position_y, params.position_x);
+        self->window.size_y = params.size_y;
+        self->window.size_x = params.size_x;
+        self->window.position_y = params.position_y;
+        self->window.position_x = params.position_x;
+        self->mouse_button = params.mouse_button;
 
         if ( !params.text ) {
-            obj->text = "";
+            self->text = "";
 
         } else {
-            obj->text = params.text;
+            self->text = params.text;
         }
 
-        obj->is_borders = params.is_borders;
+        self->is_borders = params.is_borders;
     }
 
-    return obj;
+    return self;
 }
 
-void winenbtn_register_action(winen_button* self, callback_button_click callback, void* arg) {
+void winenbtn_register_action(winenbtn* self, callback_button_click callback, void* arg) {
     if ( !self ) {
         return;
     }
@@ -390,24 +389,29 @@ void winenbtn_register_action(winen_button* self, callback_button_click callback
     self->action.argument = arg;
 }
 
-void winenbtn_draw(winen_button* self) {
+void winenbtn_draw(winenbtn* self) {
     if ( !self ) {
         return;
     }
 
-    int y = 0, x = 0;
+    if ( self->draw.function ) {
+        self->draw.function(self->draw.argument);
 
-    if ( self->is_borders ) {
-        box(self->window.obj, 0, 0);
-        y = 1;
-        x = 1;
-    } 
+    } else {
+        int y = 0, x = 0;
 
-    mvwaddstr(self->window.obj, y, x, self->text);
-    wrefresh(self->window.obj);
+        if ( self->is_borders ) {
+            box(self->window.obj, 0, 0);
+            y = 1;
+            x = 1;
+        } 
+
+        mvwaddstr(self->window.obj, y, x, self->text);
+        wrefresh(self->window.obj);
+    }
 }
 
-void winenbtn_update(winen_button* self, winen_input input) {
+void winenbtn_input(winenbtn* self, winen_input input) {
     if ( !self ) {
         return;
     }
@@ -416,7 +420,7 @@ void winenbtn_update(winen_button* self, winen_input input) {
         case KEY_MOUSE:
             {
                 if ( input.is_mouse_valid == OK &&
-                     input.mouse_event.bstate & BUTTON1_CLICKED &&
+                     input.mouse_event.bstate & self->mouse_button &&
                      input.mouse_event.x >= self->window.position_x &&
                      input.mouse_event.y >= self->window.position_y &&
                      input.mouse_event.x < self->window.position_x + self->window.size_x &&
@@ -432,7 +436,7 @@ void winenbtn_update(winen_button* self, winen_input input) {
     }
 }
 
-void winenbtn_delete(winen_button* self) {
+void winenbtn_delete(winenbtn* self) {
     if ( !self ) {
         return;
     }

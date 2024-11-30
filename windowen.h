@@ -19,16 +19,8 @@ typedef void(*callback_update)(void*);
 
 ///< Callback signature to register for click button
 typedef void(*callback_button_click)(void*);
-
-// TODO:
-// add moving window function
-
-// TODO:
-// ?[ ] write a struct with params for use special functions
-// [ ] special functions:
-//      [x] PopUpText - print a given text splitted by rows at newly cleated window with scrolling, wait for any input
-//      [ ] AskString - create new window and ask (with showing question) for input with max len
-//      [ ] Ask...
+///< Callback signature to register draw function for button
+typedef void(*callback_button_draw)(void*);
 
 typedef struct {
     int max_y, max_x;
@@ -68,16 +60,9 @@ typedef struct {
         int size_x, size_y;
         int position_x, position_y;
     } window;
-
-    // struct {
-    // } settings;
-
-    // TODO: add enum and function for turn on/off borders
-    // add custom borders
-    // add attr for clear or not window
 } windowen;
 
-/** @brief Wrap ncurses input (keyboard and mouse) for pass it to windowen_input function
+/** @brief Wrap ncurses input (keyboard and mouse) for pass it to windowen_input functions
  */
 typedef struct {
     int input;
@@ -92,6 +77,11 @@ typedef struct {
     } action;
 
     struct {
+        callback_button_draw function;
+        void* argument;
+    } draw;
+
+    struct {
         WINDOW* obj;
         int size_x, size_y;
         int position_x, position_y;
@@ -99,20 +89,57 @@ typedef struct {
 
     const char* text;
     bool is_borders;
-} winen_button;
+    int mouse_button;
+} winenbtn;
 
+/** @brief Hold parameters for create a winenbtn object */
 typedef struct {
-    int size_y, size_x;
-    int position_y, position_x;
-    char* text;
-    bool is_borders;
-} winen_button_params;
+    int size_y, size_x; ///< button size
+    int position_y, position_x; ///< button position
+    char* text; ///< text for button (must not be freed while button is alive)
+    bool is_borders; ///< draw borders for button (true) or not (false)
+    int mouse_button; ///< what mouse event to trigger to
+} winenbtn_params;
 
-winen_button* winenbtn_new(winen_button_params params);
-void winenbtn_register_action(winen_button* self, callback_button_click callback, void* arg);
-void winenbtn_draw(winen_button* self);
-void winenbtn_update(winen_button* self, winen_input input);
-void winenbtn_delete(winen_button* self);
+/** @brief Create a new button
+ * @param params Parameters for new button
+ * @return button pointer or NULL
+ */
+winenbtn* winenbtn_new(winenbtn_params params);
+
+/** @brief Register function as callback when button clicked only with mouse
+ * @param[in, out] self Pointer to valid winenbtn object
+ * @param callback User function to call on click
+ * @param arg Pointer to user argument for pass into callback
+ */
+void winenbtn_register_action(winenbtn* self, callback_button_click callback, void* arg);
+
+/** @brief Register optional function for drawing
+ *
+ * If user drawing function registered - call it for draw button
+ * use default implementation otherwise
+ *
+ * @param[in, out] self Pointer to valid winenbtn object
+ * @param callback User function to call on draw
+ * @param arg Pointer to user argument for pass into callback
+ */
+void winenbtn_register_draw(winenbtn* self, callback_button_draw callback, void* arg);
+
+/** @brief Draw button on screen
+ * @param[in, out] self Pointer to valid winenbtn object
+ */
+void winenbtn_draw(winenbtn* self);
+
+/** @brief Handles whether a button was pressed
+ * @param[in, out] self Pointer to valid winenbtn object
+ * @param input Struct with input data @see windowen_getinput
+ */
+void winenbtn_input(winenbtn* self, winen_input input);
+
+/** @brief Delete a button object
+ * @param[in, out] self Pointer to valid winenbtn object
+ */
+void winenbtn_delete(winenbtn* self);
 
 
 /** @brief Create a new windowen object
