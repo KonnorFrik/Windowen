@@ -310,7 +310,7 @@ void on_save_button_click(void* arg) {
 }
 
 int main() {
-    const int loop_delay = 100;
+    /*const int loop_delay = 100;*/
     #if DEBUG == 0
     initscr();
     noecho();
@@ -346,20 +346,21 @@ int main() {
     info.self = info_window;
     windowen_register_draw_callback(info_window, info_draw, &info);
 
-    winen_button_params save_btn_params = {
+    winenbtn_params save_btn_params = {
         .text = "Save",
         .size_x = 4,
         .size_y = 3,
         .position_x = info_window->window.position_x,
         .position_y = info_window->window.position_y + info_window->window.size_y + 1,
+        .mouse_button = BUTTON3_CLICKED,
     };
-    winen_button* save_button = winenbtn_new(save_btn_params);
+    winenbtn* save_button = winenbtn_new(save_btn_params);
     winenbtn_register_action(save_button, on_save_button_click, &main_field);
 
     int loop = 1;
     in_focus = main_windowen;
     winen_input input = {0};
-    int cursor_x = 0, cursor_y = 0;
+    /*int cursor_x = 0, cursor_y = 0;*/
 
     while ( loop ) {
         input = windowen_getinput();
@@ -386,7 +387,7 @@ int main() {
 
         // safe call registered input processing
         windowen_input(in_focus, input);
-        winenbtn_update(save_button, input);
+        winenbtn_input(save_button, input);
 
         // safe call registered update
         windowen_update(main_windowen);

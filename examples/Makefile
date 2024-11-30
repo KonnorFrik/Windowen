@@ -31,6 +31,9 @@ scroll_text: scroll_text.o $(LIB_OBJ)
 button_use: button_use.c $(LIB_OBJ)
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
+buttons_list: buttons_list.c $(LIB_OBJ)
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+
 show:
 	@echo $(LIB_SRC)
 	@echo $(LIB_OBJ)
